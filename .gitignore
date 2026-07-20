@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+tinyshakespeare.txt
+deep_noise_v3.json
+a1_summary.json
+a2_summary.json
