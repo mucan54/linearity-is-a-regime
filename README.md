@@ -18,6 +18,7 @@ fabricated device.**
 |---|---|---|
 | `sim_microring_activation.py` | §6.1 | `figures/fig_activation.*` — Kerr microring drop-port self-action curve, fit to sigmoid (R²=0.986) / GELU (0.889) / SiLU (0.885), operated just below the √3 bistability threshold. Also writes `figures/act_{xn,yn}.npy`. |
 | `sim_energy_budget.py` | §6.2 | `figures/fig_energy.*` — electronic O/E→act→E/O (~11 pJ) vs all-optical χ⁽²⁾ path vs bandwidth; the all-optical path wins only below ≈0.19 GHz. |
+| `sim_ppa_breakeven.py` | §6.4 | `figures/fig_ppa_breakeven.*`, `figures/fig_ppa_tornado.*` — system-level TOPS/W break-even for a 256×256 optical tensor core; shows the static thermal-tuning floor (which alone fails to amortize over MACs) decides whether optics beats electronics, plus a sensitivity tornado. |
 | `sim_roofline.py` | §5.6 | `figures/fig_roofline.*` — roofline showing autoregressive decode is memory-bound (pinned to the shared memory roof, so the optical compute ceiling gives no gain) while only high-reuse prefill/training reach the compute-bound regime an optical ceiling can lift. |
 | `sim_architecture_diagram.py` | §4 | `figures/fig_architecture.*` — schematic of the proposed frequency-native nonlinearity pipeline (no computation). |
 | `deep_noise_study.py` | §6.3 | `figures/fig_depth_noise.*`, `figures/fig_expressivity_tradeoff.*` — **the central result** (see below). |
@@ -73,6 +74,7 @@ python sim_microring_activation.py     # writes act_*.npy used by the probe
 python sim_energy_budget.py
 python sim_architecture_diagram.py
 python sim_roofline.py
+python sim_ppa_breakeven.py
 python deep_noise_study.py             # auto-downloads tiny-shakespeare (~1 MB)
 python sim_singleblock_noise_probe.py  # optional, superseded
 ```
