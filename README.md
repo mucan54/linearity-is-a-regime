@@ -37,15 +37,19 @@ inconsistent geometry.
 Downstream anchors, all re-derived by the scripts: ENOB ≈ 11.7 bits at 10 GHz;
 ASE γ ≈ 0.13 % at `P_c` against 0.68 % at 0.5 mW/channel; self-written parameter
 cost `P_c/B ≈ 36 pJ` at the ring's 386 MHz bandwidth (≈ 0.9 nJ at converter rate)
-against ≈ 3 pJ to write the same parameter externally; XPM ≈ 5 mrad on a 1 mm bus
-but ≈ 16 rad inside the ring. `sim_ppa_breakeven.py` now carries the activation
-bank's optical drive as an explicit term (`Pact`), ≈ 0.027 pJ/MAC at 10 GHz,
-which is what removes the sub-GHz break-even corner entirely.
+against ≈ 4.3 pJ to write the same parameter externally **on a common system
+boundary** (encoder + probe, not encoder alone); XPM ≈ 5 mrad on a 1 mm bus and
+≲ 0.1 mrad inside the ring at channel spacing — the neighbouring planes are
+259 half-linewidths off resonance and enter suppressed by ~1.5e-5. (Both the
+"16 rad inside the ring" figure and the 0.027 pJ/MAC activation charge that
+once appeared here are **obsolete**; see the v23 and v32 sections below.)
 
 ## The activation-drive floor (v23)
 
-`sim_ppa_breakeven.py` previously charged the activation bank as
-`Pact/(eta*Nch*B)`, which implicitly assumes one activation per `1/B`. A ring of
+`sim_ppa_breakeven.py` once charged the activation bank as `Pact/(eta*Nch*B)`,
+which implicitly assumes one activation per `1/B` and yielded an **obsolete and
+incorrect** 0.027 pJ/MAC. That number appears nowhere in the current model or paper;
+the correct figure is 0.70 pJ/MAC, derived below. A ring of
 loaded Q responds at its **own** linewidth `B_ring = nu/Q ≈ 386 MHz`, not at the
 system symbol rate — so that form disagreed with the per-activation figure
 `P_c/B_ring ≈ 36 pJ` quoted in §VII by exactly `B/B_ring ≈ 26`.
@@ -90,6 +94,40 @@ on L≤8 only, predict the held-out L=12. Under-prediction is −18..−24% for 
 ~1.5× range step; compounded to L=96 that is ×3–4, so the paper's central
 extrapolation band is quoted as a floor (lifted band ≲0.003 nats — verdict
 unchanged, ASE remains far from binding).
+
+## Reproducing every figure
+
+```bash
+pip install -r requirements.txt
+
+# Figs. 1-2, 4  (architecture schematic, roofline, chi(2) vs O/E comparison)
+python3 sim_architecture_diagram.py
+python3 sim_roofline.py
+python3 sim_energy_budget.py
+
+# Fig. 3   (microring activation curve + self-consistency assert)
+python3 sim_microring_activation.py
+
+# Sec. IV-B softmax cascade (self-action vs externally detuned)
+python3 sim_softmax_cascade.py
+
+# Figs. 6-8  (energy map, independent-parameter tornado, Q optimum)
+python3 sim_ppa_breakeven.py
+
+# Fig. 5 + noise study.  The depth sweep is the long one (GPU, ~20 min for L=8,12).
+python3 deep_noise_study.py      # depths 2,4,6            -> deep_noise_v3.json
+python3 deep_noise_deep.py       # extends to 8,12         -> deep_noise_all.json
+python3 deep_noise_dual.py       # constant vs sqrt arms   -> deep_noise_dual.json
+python3 deep_noise_cm.py         # common-mode drift arm   -> deep_noise_cm.json
+python3 plot_depth_noise.py
+python3 plot_expressivity.py
+
+# Statistical check on the depth scaling law (no new experiment needed)
+python3 analysis_heldout.py
+```
+
+All figures are written to `figures/`. The depth scripts expect `input.txt`
+(tiny-Shakespeare) in the working directory.
 
 ## Contents
 

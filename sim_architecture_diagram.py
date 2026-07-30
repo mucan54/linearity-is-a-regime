@@ -17,7 +17,7 @@ def arrow(x1,y1,x2,y2,color="#333",style="-|>",lw=1.8,ls="-"):
                                  lw=lw,color=color,ls=ls))
 
 # optical-domain band
-ax.add_patch(FancyBboxPatch((0.15,1.5),9.4,3.15,boxstyle="round,pad=0.02,rounding_size=0.1",
+ax.add_patch(FancyBboxPatch((0.15,1.42),9.7,3.23,boxstyle="round,pad=0.02,rounding_size=0.1",
                             fc="#eaf3fb",ec="#8fb8e0",lw=1.2,ls="--"))
 ax.text(4.85,4.5,"OPTICAL DOMAIN  (field stays coherent — no O/E)",ha="center",fontsize=9,color="#2a5d94",style="italic")
 
@@ -27,8 +27,18 @@ box(4.4,2.35,1.9,1.5,"Linear core\nMZI / ring MVM\n$y=Wx$\n(per-plane)","#d5e8d4
 box(6.7,2.6,2.6,1.0,"Nonlinear ring bank\nKerr self-action  $\\omega_r(\\,|x|^2)$\nactivation per plane","#f8d7da")
 ax.text(8.0,3.74,"per-$\\lambda$ demux $\\to$ rings $\\to$ mux (Sec. IV-A)",ha="center",fontsize=7.4,color="#8a3b3f",style="italic")
 
-# softmax/mixing sub-branch
-box(6.7,1.7,2.6,0.7,"$\\chi^{(2)}$ mixing:  $\\omega_i\\!\\pm\\!\\omega_j$\nexp / normalize (softmax)","#f3e0f7",fs=8.6)
+# softmax sub-branch: THREE separate stages, honestly labelled (referee item B).
+# The exponential is NOT chi(2) mixing -- it is an externally detuned Lorentzian
+# cascade; the sum is a detector operation; the reciprocal is unresolved.
+box(4.30,1.66,1.72,0.78,"(a) exp: externally\ndetuned Lorentzian\ncascade (Sec. IV-B)","#f3e0f7",fs=7.0)
+box(6.22,1.66,1.62,0.78,"(b) $\\sum_j$: broadband\ndetector sum\n(linear)","#e6e6f5",fs=7.0)
+box(8.04,1.66,1.74,0.78,"(c) $(\\sum_j)^{-1}$ and\nredistribute\nUNRESOLVED","#fde2e2",fs=7.0)
+ax.text(7.05,1.50,"softmax path: (a) is externally written, not mechanism (i); (c) has no optical solution here",
+        ha="center",fontsize=6.6,color="#8a3b3f",style="italic")
+arrow(6.02,2.05,6.22,2.05,color="#8e44ad",lw=1.3)
+arrow(7.84,2.05,8.04,2.05,color="#8e44ad",lw=1.3)
+# (c) is not closed optically -> it exits to electronics
+arrow(9.78,2.05,10.0,2.05,color="#c0392b",ls="--",lw=1.3)
 
 # detector + electronics
 box(10.0,2.6,1.7,1.0,"Photodetector\narray  $|E|^2$","#e2e2e2")
@@ -39,7 +49,7 @@ arrow(4.0,3.1,4.4,3.1)
 arrow(6.3,3.1,6.7,3.1)
 arrow(9.3,3.1,10.0,3.1)
 # nonlinear -> mixing
-arrow(8.0,2.6,8.0,2.4,color="#8e44ad")
+arrow(5.16,2.35,5.16,2.44,color="#8e44ad")
 # detector -> electronics (O/E boundary, red dashed)
 arrow(10.85,2.6,10.85,1.7,color="#c0392b",ls="--")
 ax.text(11.15,2.15,"O/E tax",color="#c0392b",fontsize=8,rotation=90,va="center")

@@ -16,10 +16,17 @@ P = {
  "Pheat"         : (1e-3,  1e-4,  20e-3,"W/elem", "static heater power PER tunable element"),
  "k_el"          : (1.0,   0.5,   2.0,  "",       "tunable elements / Nch^2 (crossbar~1, mesh~2)"),
  "eta_wp"        : (0.2,   0.1,   0.3,  "",       "laser wall-plug efficiency"),
- "Pch"           : (0.5e-3,0.1e-3,2e-3, "W/ch",   "optical power per input channel (linear core)"),
- "Pact"          : (13.8e-3,0.33e-3,83e-3,"W/ring", "optical drive per activation ring (P_c, TFLN Q=5e5;\n"
-                                                    "                                    range = ring-geometry spread R=20-80 um)"),
- "Qring"         : (5e5,   1e5,   5e6,  "",       "loaded Q of the activation ring (sets B_ring = nu/Q)"),
+ "Pch"           : (13.8e-3,13.8e-3,138e-3,"W/ch", "optical power per input channel. NOT independent of Pact: the\n"
+                                                    "                                    self-written premise (Sec. VII) requires the mesh to DELIVER P_c\n"
+                                                    "                                    at the bank, so nominal = P_c and the range is mesh loss 0-10 dB"),
+ # --- activation ring: INDEPENDENT device parameters. P_c is DERIVED from them.
+ # Earlier versions varied P_c and Q as separate tornado bars, which is unphysical:
+ # P_c ~ V_eff/Q^2 by construction, so those combinations cannot coexist. The old
+ # 0.33 mW lower bound was also a stale artefact (TFLN n2 with a silicon mode volume).
+ "n2"            : (1.8e-19,0.9e-19,3.6e-19,"m^2/W","Kerr coefficient of the platform"),
+ "Aeff"          : (1.0e-12,0.7e-12,2.0e-12,"m^2",  "effective modal area"),
+ "Rring"         : (20e-6, 20e-6, 80e-6,"m",       "ring radius (bend loss pushes R up at high Q)"),
+ "Qring"         : (5e5,   1e5,   5e6,  "",        "loaded Q; with n2/Aeff/R this fixes P_c and B_ring"),
  "FoM"           : (10e-15,5e-15, 50e-15,"J/conv-step","ADC/DAC Walden figure of merit"),
  "ENOB"          : (8,     6,     8,    "bits",   "converter effective bits"),
  "Emod"          : (0.5e-12,0.1e-12,1e-12,"J",    "modulator energy per symbol"),
@@ -30,8 +37,16 @@ nom = {k:v[0] for k,v in P.items()}
 
 NU = 2.99792458e8/1550e-9          # 193.4 THz optical carrier
 
+N0 = 2.21   # TFLN group index
+
+def P_c_of(n2, Aeff, Rring, Qring):
+    """Characteristic self-action drive DERIVED from independent device parameters:
+    P_c = n0^2 V_eff (2 pi nu) / (4 c n2 Q^2),  V_eff = Aeff * 2 pi R."""
+    Veff = Aeff*2*np.pi*Rring
+    return (N0**2*Veff*2*np.pi*NU)/(4*2.99792458e8*n2*Qring**2)
+
 def E_opt_per_MAC(B, Pheat, k_el, eta_wp, Pch, FoM, ENOB, Emod, Epd, Nch,
-                  Pact=13.8e-3, Qring=5e5, **_):
+                  n2=1.8e-19, Aeff=1.0e-12, Rring=20e-6, Qring=5e5, **_):
     """Energy per MAC for the optical core.
 
     IMPORTANT (v23 correction): an activation ring of loaded Q responds at its own
@@ -46,6 +61,7 @@ def E_opt_per_MAC(B, Pheat, k_el, eta_wp, Pch, FoM, ENOB, Emod, Epd, Nch,
     bank's energy per MAC is therefore a BANDWIDTH-INDEPENDENT floor.
     The heater floor for the bank scales the same way and goes as Q.
     """
+    Pact        = P_c_of(n2, Aeff, Rring, Qring)
     B_ring      = NU/Qring
     replicas    = np.maximum(B/B_ring, 1.0)           # time-multiplexed ring banks
     E_conv_pair = 2*(FoM*(2**ENOB))                   # one ADC + one DAC per dot-product output
@@ -77,7 +93,7 @@ BB, PP = np.meshgrid(Bs, Phs)
 kw = dict(nom); 
 Egrid = E_opt_per_MAC(B=BB, Pheat=PP, k_el=kw["k_el"], eta_wp=kw["eta_wp"], Pch=kw["Pch"],
                       FoM=kw["FoM"], ENOB=kw["ENOB"], Emod=kw["Emod"], Epd=kw["Epd"], Nch=kw["Nch"],
-                      Pact=kw["Pact"], Qring=kw["Qring"])["total"]
+                      n2=kw["n2"], Aeff=kw["Aeff"], Rring=kw["Rring"], Qring=kw["Qring"])["total"]
 TW = tops_w(Egrid)                     # optical TOPS/W over the grid
 elec = tops_w(nom["E_elec_MAC"])       # electronic baseline line (nominal)
 
@@ -135,8 +151,9 @@ TW_norm = tops_w(E_opt_per_MAC(**nom)["total"]+0.043e-12)
 rows.append(("normchg", TW_norm, base_TW, abs(base_TW-TW_norm)))
 rows.sort(key=lambda r:r[3])
 fig2,ax2=plt.subplots(figsize=(3.5,3.7))
-labels={"Pact":"Act. drive 0.33\u201383 mW/ring","Qring":"Activation ring Q 1e5\u20135e6","normchg":"Norm charge 0\u20130.04 pJ/MAC","B":"Bandwidth 1\u2013100 GHz","Pheat":"Heater/elem 0.1\u201320 mW","k_el":"Elements/Nch\u00b2 0.5\u20132",
-        "eta_wp":"Wall-plug 0.1\u20130.3","Pch":"Opt power/ch 0.1\u20132 mW","FoM":"ADC FoM 5\u201350 fJ",
+labels={"n2":"Kerr $n_2$ 0.9\u20133.6e-19 m$^2$/W","Aeff":"Mode area 0.7\u20132.0 $\\mu$m$^2$",
+        "Rring":"Ring radius 20\u201380 $\\mu$m","Qring":"Loaded $Q$ 1e5\u20135e6 ($\\to P_c$)","normchg":"Norm charge 0\u20130.04 pJ/MAC","B":"Bandwidth 1\u2013100 GHz","Pheat":"Heater/elem 0.1\u201320 mW","k_el":"Elements/Nch\u00b2 0.5\u20132",
+        "eta_wp":"Wall-plug 0.1\u20130.3","Pch":"Mesh delivery 14\u2013140 mW/ch (0\u201310 dB)","FoM":"ADC FoM 5\u201350 fJ",
         "ENOB":"ENOB 6\u20138","Emod":"Modulator 0.1\u20131 pJ","Epd":"Detector 0.05\u20130.2 pJ"}
 for i,(k,tlo,thi,sw) in enumerate(rows):
     lo,hi=sorted([tlo,thi])
@@ -175,7 +192,7 @@ print("DONE")
 # higher Q is cheaper per activation. But keeping up with B needs M = B/B_ring ~ Q
 # replicas, so the bank's heater floor ~ Q. The sum has a minimum.
 print("\n=== activation-bank optimisation over ring Q ===")
-Pc0, Q0 = nom["Pact"], nom["Qring"]
+Pc0, Q0 = P_c_of(nom["n2"],nom["Aeff"],nom["Rring"],nom["Qring"]), nom["Qring"]
 def bank_terms(Q, Pheat=nom["Pheat"], eta=nom["eta_wp"], N=nom["Nch"]):
     Pc    = Pc0*(Q0/Q)**2                 # P_c ~ Q^-2
     Bring = NU/Q
@@ -187,7 +204,7 @@ print("  Q* = %.2e  ->  drive %.3f + heater %.3f = %.3f pJ/MAC  (%.1fx baseline)
       Qstar, Ea[i]*1e12, Eh[i]*1e12, Etot[i]*1e12, Etot[i]/nom["E_elec_MAC"]))
 print("  at Q*: P_c = %.0f uW, B_ring = %.1f MHz, replicas = %.0f, rings = %.2e"%(
       Pc0*(Q0/Qstar)**2*1e6, NU/Qstar/1e6, nom["B"]/(NU/Qstar), nom["Nch"]*nom["B"]/(NU/Qstar)))
-for pitch in (25e-6, 30e-6):
+for pitch in (50e-6, 60e-6):
     print("  bank area at %.0f um pitch: %.0f mm^2"%(
           pitch*1e6, nom["Nch"]*nom["B"]/(NU/Qstar)*pitch**2*1e6))
 print("  --> even the optimum stays above the %.2f pJ/MAC digital baseline."%(nom["E_elec_MAC"]*1e12))
