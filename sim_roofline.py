@@ -37,9 +37,16 @@ for r, P, c in [(ridge_e, P_ELEC, "#2ca02c"), (ridge_o, P_OPT, "#1f3a93")]:
 
 # workload markers
 I_dec, I_pre = 1.5, 5.0e3
+I_batch = 27.0   # batched-decode KV plateau: 1 + P/(2nLd), 70B @ 2K ctx (Sec. V-F)
 # decode: on the shared slope (both substrates coincide)
 ax.axvline(I_dec, color="#c0392b", lw=1.0, ls=":", zorder=2)
 ax.plot([I_dec], [slope(I_dec)], "s", color="#c0392b", ms=8, zorder=5)
+# batched decode: climbs the shared slope but saturates at the KV plateau, left of both ridges
+ax.plot([I_batch], [slope(I_batch)], "D", color="#a04000", ms=7, zorder=5)
+ax.annotate("batched decode\n(KV plateau, $1{+}P/2nLd$;\n$\\approx$27 @ 2K ctx, $\\approx$1.4 @ 128K)",
+            xy=(I_batch, slope(I_batch)), xytext=(I_batch*1.9, slope(I_batch)*0.16),
+            fontsize=7.6, color="#a04000",
+            arrowprops=dict(arrowstyle="-", lw=0.7, color="#a04000", shrinkA=1, shrinkB=2))
 ax.annotate("LLM decode (batch 1)\nlow intensity $\\Rightarrow$ memory-bound:\nboth substrates pinned to the same\nroof; optical ceiling gives no gain",
             xy=(I_dec, slope(I_dec)), xytext=(0.115, 20),
             fontsize=8.4, color="#c0392b",

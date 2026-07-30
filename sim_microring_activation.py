@@ -8,6 +8,9 @@ import os; os.makedirs("figures",exist_ok=True)
 import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib; matplotlib.use("Agg")
+import matplotlib as _mpl
+_mpl.rcParams.update({"font.size":6.6,"axes.labelsize":6.8,"axes.titlesize":7.0,"xtick.labelsize":6.0,"ytick.labelsize":6.0,"legend.fontsize":5.4,"lines.linewidth":1.4})
+
 import matplotlib.pyplot as plt, json
 
 # ---------- Canonical normalized Kerr microring (CMT) ----------
@@ -61,29 +64,77 @@ for name,fn in [("GELU",gelu),("SiLU",silu),("Softplus",softplus),("Sigmoid",sig
 best=max(res,key=lambda k:res[k][0])
 print("BEST:",best,"R^2=",round(res[best][0],4))
 
-# physical anchoring: characteristic Kerr power P_c for a realistic high-Q ring
-lam0=1550e-9; c=3e8; w0=2*np.pi*c/lam0
-Q=5e5; n0=2.4; n2=4.5e-18; Veff=3e-18
-# characteristic (bistability) input power scale ~ n0^2 Veff w0 /(4 c n2 Q^2)  (order-of-mag)
-Pc = (n0**2 * Veff * w0)/(4*c*n2*Q**2)
-print(f"Characteristic Kerr power P_c ~ {Pc*1e3:.3f} mW  (Q={Q:.0e})")
-print(f"Operating input range: {xin.max()*Pc*1e3:.2f} mW  (x_in_max={xin.max():.1f} * P_c)")
+# ---------- Physical anchoring: characteristic Kerr power P_c ----------
+# PLATFORM: thin-film lithium niobate. Forced, not chosen -- mechanism (i) needs
+# chi(2), which excludes centrosymmetric Si and SiN, and TFLN is TPA-free at 1550 nm.
+# NOTE (correction, v22): earlier revisions carried Veff = 3e-18 m^3, a SILICON
+# geometry (Aeff ~ 0.1 um^2 x L ~ 30 um). For a TFLN mode of Aeff ~ 1 um^2 that
+# same Veff implies L = 3 um, i.e. R = 0.48 um -- impossible at Q = 5e5. Veff is
+# now built from the actual geometry and cross-checked below.
+lam0=1550e-9; c=2.99792458e8; nu0=c/lam0; w0=2*np.pi*nu0
+Q    = 5e5
+n0   = 2.21        # TFLN extraordinary index at 1550 nm
+n2   = 1.8e-19     # m^2/W, TFLN Kerr (~25x below silicon's 4.5e-18)
+Aeff = 1.0e-12     # m^2, ~1 um^2 ridge mode
+Rring= 20e-6       # m, ring radius (smallest that plausibly holds Q = 5e5)
+Lring= 2*np.pi*Rring
+Veff = Aeff*Lring
+Pc   = (n0**2 * Veff * w0)/(4*c*n2*Q**2)
+print(f"TFLN ring: Aeff={Aeff*1e12:.2f} um^2, R={Rring*1e6:.0f} um, L={Lring*1e6:.1f} um, Veff={Veff:.2e} m^3")
+print(f"Characteristic Kerr power P_c ~ {Pc*1e3:.2f} mW  (Q={Q:.0e})")
+print(f"Operating input range: {xin.max()*Pc*1e3:.1f} mW  (x_in_max={xin.max():.1f} * P_c)")
 
-fig,ax=plt.subplots(1,2,figsize=(11,4.2))
-ax[0].plot(xin, xout, lw=2.3, color="#1b3a6b")
-ax[0].set_xlabel(r"Normalized input $x_{in}$ (units of $P_c$)")
-ax[0].set_ylabel(r"Normalized drop output")
-ax[0].set_title(f"Kerr microring transfer ($\\Delta$={Delta}, below bistability)")
+# ---------- Self-consistency check (this is what caught the Veff error) ----------
+# The CMT normalisation demands that at P_in ~ P_c the Kerr index shift reach
+# half a linewidth: dn_required = n0/(2Q).  Compute dn independently from the
+# resonant buildup and compare -- the two must agree to O(1) or Veff is wrong.
+linewidth = nu0/Q
+FSR       = 1.19e12
+finesse   = FSR/linewidth
+P_circ    = Pc*finesse/np.pi          # resonant power buildup
+dn_actual = n2*(P_circ/Aeff)
+dn_req    = n0/(2*Q)
+print(f"  linewidth={linewidth/1e6:.0f} MHz, finesse={finesse:.0f}, P_circ={P_circ:.2f} W")
+print(f"  SELF-CONSISTENCY  dn_actual/dn_required = {dn_actual/dn_req:.2f}  "
+      f"(dn_actual={dn_actual:.2e}, dn_required={dn_req:.2e})")
+assert 0.5 < dn_actual/dn_req < 2.0, "Veff/Aeff inconsistent with the CMT normalisation"
+
+# ---------- Thermo-optic vs Kerr (Sec. VI-A) ----------
+# Ratio is INDEPENDENT of drive level: circulating power cancels.
+dndT = 3.3e-5      # K^-1, LN thermo-optic coefficient
+for alpha in (0.02,0.05,0.10):
+    for Rth in (1e3,1e4,1e5):
+        ratio = dndT*alpha*Rth*Aeff*np.pi/(n2*finesse)
+        print(f"  dn_th/dn_Kerr @ alpha={alpha:.0%}, Rth={Rth:.0e} K/W : {ratio:8.1f}x")
+
+# ---------- Downstream anchors quoted in the paper ----------
+h=6.62607015e-34; hnu=h*nu0
+for B,lbl in ((1e10,"10 GHz"),(linewidth,"ring linewidth")):
+    N=Pc/(hnu*B)
+    print(f"  ENOB @ {lbl:14s}: {np.log2(np.sqrt(N)):.1f} bits ; write energy P_c/B = {Pc/B*1e12:.1f} pJ")
+Q_hi = nu0/1e10                       # Q that passes a 10 GHz signal
+print(f"  at B=10 GHz need Q={Q_hi:.2e} -> P_c={Pc*(Q/Q_hi)**2:.2f} W, write={Pc*(Q/Q_hi)**2/1e10*1e12:.0f} pJ")
+print(f"  heater 1-20 mW vs P_c: x{1e-3/Pc:.2f} to x{20e-3/Pc:.2f}")
+print(f"  ASE gamma at P_c: {0.68*np.sqrt(0.5e-3/Pc):.2f} %  (0.68% at 0.5 mW/ch)")
+gnl = 2*np.pi*n2/(lam0*Aeff)
+phi_bus = 2*gnl*1e-3*255*Pc
+print(f"  gamma_nl={gnl:.2f} /W/m ; XPM bus (255 ch @ P_c, 1 mm)={phi_bus*1e3:.1f} mrad ; in-ring={phi_bus*finesse:.1f} rad")
+
+fig,ax=plt.subplots(1,2,figsize=(3.45,1.95))
+ax[0].plot(xin, xout, lw=1.6, color="#1b3a6b")
+ax[0].set_xlabel(r"Input $x_{in}$ ($P_c$)")
+ax[0].set_ylabel("Drop output")
+ax[0].set_title(f"Ring transfer ($\\Delta$={Delta})",pad=3)
 ax[0].grid(alpha=0.3)
-ax[1].plot(xn,yn,lw=2.5,color="#1b3a6b",label="Microring (simulated)")
+ax[1].plot(xn,yn,lw=1.7,color="#1b3a6b",label="Microring")
 ax[1].plot(xn,res[best][1],"--",lw=2,color="#c0392b",
-           label=f"Best fit: {best} ($R^2$={res[best][0]:.3f})")
+           label=f"{best} ($R^2$={res[best][0]:.3f})")
 # also overlay GELU fit for reference
 if best!="GELU":
     ax[1].plot(xn,res["GELU"][1],":",lw=1.6,color="#27ae60",label=f"GELU ($R^2$={res['GELU'][0]:.3f})")
-ax[1].set_xlabel("Normalized input"); ax[1].set_ylabel("Normalized output")
-ax[1].set_title("Fit to standard activations"); ax[1].legend(frameon=False); ax[1].grid(alpha=0.3)
-plt.tight_layout()
+ax[1].set_xlabel("Norm. input"); ax[1].set_ylabel("Norm. output")
+ax[1].set_title("Fit to activations",pad=3); ax[1].legend(frameon=False); ax[1].grid(alpha=0.3)
+plt.tight_layout(pad=0.25)
 plt.savefig("figures/fig_activation.pdf",bbox_inches="tight")
 plt.savefig("figures/fig_activation.png",dpi=140,bbox_inches="tight")
 print("saved fig_activation")

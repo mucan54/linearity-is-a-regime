@@ -25,6 +25,7 @@ box(0.4,2.6,1.5,1.0,"Frequency\ncomb /\nmulti-λ laser","#fdf2d0")
 box(2.3,2.6,1.7,1.0,"WDM encode\n$x_i \\to \\omega_i$\n(data on planes)","#dbe6f5")
 box(4.4,2.35,1.9,1.5,"Linear core\nMZI / ring MVM\n$y=Wx$\n(per-plane)","#d5e8d4")
 box(6.7,2.6,2.6,1.0,"Nonlinear ring bank\nKerr self-action  $\\omega_r(\\,|x|^2)$\nactivation per plane","#f8d7da")
+ax.text(8.0,3.74,"per-$\\lambda$ demux $\\to$ rings $\\to$ mux (Sec. IV-A)",ha="center",fontsize=7.4,color="#8a3b3f",style="italic")
 
 # softmax/mixing sub-branch
 box(6.7,1.7,2.6,0.7,"$\\chi^{(2)}$ mixing:  $\\omega_i\\!\\pm\\!\\omega_j$\nexp / normalize (softmax)","#f3e0f7",fs=8.6)

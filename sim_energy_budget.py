@@ -6,6 +6,9 @@ import os; os.makedirs("figures",exist_ok=True)
 
 import numpy as np
 import matplotlib; matplotlib.use("Agg")
+import matplotlib as _mpl
+_mpl.rcParams.update({"font.size":6.6,"axes.labelsize":6.8,"axes.titlesize":7.0,"xtick.labelsize":6.0,"ytick.labelsize":6.0,"legend.fontsize":5.4,"lines.linewidth":1.4})
+
 import matplotlib.pyplot as plt, json
 
 # ================= Electronic O/E -> activation -> E/O round trip =================
@@ -43,29 +46,29 @@ def analyze(p_scale):
     E_op_wall = E_op_optical / WPE
     return Q, B, P_pump, E_op_wall
 
-fig,ax=plt.subplots(1,2,figsize=(11.5,4.4))
+fig,ax=plt.subplots(1,2,figsize=(3.45,1.95))
 colors={2:"#1b3a6b",3:"#8e44ad"}
 cross={}
 for p in (2,3):
     Q,B,Ppump,Ewall = analyze(p)
-    ax[0].loglog(B/1e9, Ewall*1e12, lw=2.3, color=colors[p], label=f"all-optical $\\chi^{{(2)}}$ (Q-scaling $p$={p})")
+    ax[0].loglog(B/1e9, Ewall*1e12, lw=1.6, color=colors[p], label=f"$\\chi^{{(2)}}$ ($p$={p})")
     # crossover with electronic mid
     below = np.where(Ewall*1e12 < E_elec)[0]
     if len(below): cross[p]=B[below[-1]]/1e9   # highest bandwidth still beating electronic
 ax[0].axhspan(E_elec_lo, E_elec_hi, color="#c0392b", alpha=0.13)
-ax[0].axhline(E_elec, color="#c0392b", lw=1.8, ls="--", label=f"electronic round trip (~{E_elec:.1f} pJ)")
-ax[0].set_xlabel("Activation bandwidth (GHz)"); ax[0].set_ylabel("Energy per activation (pJ)")
-ax[0].set_title("Energy/op: all-optical vs electronic"); ax[0].grid(alpha=0.3, which="both")
-ax[0].legend(frameon=False, fontsize=8.5)
+ax[0].axhline(E_elec, color="#c0392b", lw=1.8, ls="--", label=f"electronic (~{E_elec:.0f} pJ)")
+ax[0].set_xlabel("Bandwidth (GHz)"); ax[0].set_ylabel("Energy (pJ)")
+ax[0].set_title("Energy per activation",pad=3); ax[0].grid(alpha=0.3, which="both")
+ax[0].legend(frameon=False, fontsize=5.2)
 
 # pump power vs bandwidth
 for p in (2,3):
     Q,B,Ppump,Ewall = analyze(p)
-    ax[1].loglog(B/1e9, Ppump*1e3, lw=2.3, color=colors[p], label=f"$p$={p}")
-ax[1].set_xlabel("Activation bandwidth (GHz)"); ax[1].set_ylabel("Required CW pump power (mW)")
-ax[1].set_title(f"Pump power for {int(eta_target*100)}% conversion"); ax[1].grid(alpha=0.3, which="both")
+    ax[1].loglog(B/1e9, Ppump*1e3, lw=1.6, color=colors[p], label=f"$p$={p}")
+ax[1].set_xlabel("Bandwidth (GHz)"); ax[1].set_ylabel("CW pump (mW)")
+ax[1].set_title(f"Pump for {int(eta_target*100)}% conv.",pad=3); ax[1].grid(alpha=0.3, which="both")
 ax[1].legend(frameon=False)
-plt.tight_layout()
+plt.tight_layout(pad=0.25)
 plt.savefig("figures/fig_energy.pdf", bbox_inches="tight")
 plt.savefig("figures/fig_energy.png", dpi=140, bbox_inches="tight")
 print("saved fig_energy")
