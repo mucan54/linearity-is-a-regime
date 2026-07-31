@@ -32,7 +32,7 @@ ax.text(8.0,3.74,"per-$\\lambda$ demux $\\to$ rings $\\to$ mux (Sec. IV-A)",ha="
 # cascade; the sum is a detector operation; the reciprocal is unresolved.
 box(4.30,1.66,1.72,0.78,"(a) exp: externally\ndetuned Lorentzian\ncascade (Sec. IV-B)","#f3e0f7",fs=7.0)
 box(6.22,1.66,1.62,0.78,"(b) $\\sum_j$: broadband\ndetector sum\n(linear)","#e6e6f5",fs=7.0)
-box(8.04,1.66,1.74,0.78,"(c) $(\\sum_j)^{-1}$ and\nredistribute\nUNRESOLVED","#fde2e2",fs=7.0)
+box(8.04,1.66,1.74,0.78,"(c) $(\\sum_j)^{-1}$ and\nredistribute\n$\\bf{UNRESOLVED}$","#fde2e2",fs=7.6)
 ax.text(7.05,1.50,"softmax path: (a) is externally written, not mechanism (i); (c) has no optical solution here",
         ha="center",fontsize=6.6,color="#8a3b3f",style="italic")
 arrow(6.02,2.05,6.22,2.05,color="#8e44ad",lw=1.3)
@@ -61,7 +61,7 @@ ax.text(6.4,1.32,"electronic feedback / reprogramming (bias, gains)",color="#666
 ax.text(3.15,2.35,"$\\{\\omega_1,\\omega_2,\\dots\\}$ = separable computational planes",
         fontsize=7.8,color="#2a5d94",ha="center")
 
-ax.set_title("Frequency-native photonic transformer layer: linear MVM + frequency-encoded nonlinearity",
+ax.set_title("Hybrid frequency-domain photonic\u2013electronic transformer pipeline:\nlinear MVM + frequency-encoded activation; normalization unresolved",
              fontsize=10.5,pad=8)
 plt.tight_layout()
 plt.savefig("figures/fig_architecture.pdf",bbox_inches="tight")
