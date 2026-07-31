@@ -1,0 +1,60 @@
+# Zenodo and GitHub read this file to build the citation record for a release.
+# Update `version` and `date-released` on every tagged release.
+cff-version: 1.2.0
+message: >-
+  If you use this code, please cite it using the metadata below.
+title: >-
+  Linearity Is a Regime, Not a Law: reproducibility code for
+  frequency degrees of freedom as native nonlinearity primitives
+  for optical computing
+type: software
+authors:
+  - family-names: Özdemir
+    given-names: Muhammed Can
+    orcid: 'https://orcid.org/0000-0002-4002-7967'
+    affiliation: Independent researcher
+    email: info@mucan.dev
+    city: Istanbul
+    country: TR
+version: 1.0.0
+date-released: '2026-07-31'
+license: MIT
+repository-code: 'https://github.com/mucan54/linearity-is-a-regime'
+url: 'https://github.com/mucan54/linearity-is-a-regime'
+abstract: >-
+  Numerical models behind the paper "Linearity Is a Regime, Not a Law".
+  The code contains a self-consistent steady-state coupled-mode model of a
+  thin-film lithium niobate microring operated as a self-action activation;
+  component- and core-level energy budgets for a 256x256 optical tensor core,
+  including the activation bank's own optical drive charged at the ring's
+  linewidth rather than the system symbol rate; a roofline analysis of
+  autoregressive decode under batching; a cascaded-Lorentzian softmax study;
+  and depth-resolved noise-injection studies on character-level transformers
+  covering independent, correlated common-mode and complex-phase perturbations.
+  All results are idealized simulations; no device was fabricated or measured.
+keywords:
+  - optical computing
+  - photonic accelerator
+  - optical nonlinearity
+  - microring resonator
+  - thin-film lithium niobate
+  - Kerr self-action
+  - frequency comb
+  - transformer
+  - energy efficiency
+  - reproducibility
+# After the journal version is accepted, uncomment and complete this block so
+# that citing the software also points readers at the paper:
+#
+# preferred-citation:
+#   type: article
+#   title: >-
+#     Linearity Is a Regime, Not a Law: Frequency Degrees of Freedom as
+#     Native Nonlinearity Primitives for Optical Computing
+#   authors:
+#     - family-names: Özdemir
+#       given-names: Muhammed Can
+#       orcid: 'https://orcid.org/0000-0002-4002-7967'
+#   journal: IEEE Journal of Selected Topics in Quantum Electronics
+#   year: 2026
+#   doi: 10.1109/JSTQE.XXXX.XXXXXXX
