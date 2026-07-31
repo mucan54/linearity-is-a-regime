@@ -1,6 +1,6 @@
 # Linearity Is a Regime, Not a Law
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21712172.svg)](https://doi.org/10.5281/zenodo.21712172)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21712171.svg)](https://doi.org/10.5281/zenodo.21712171)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Reproducibility code for the paper **"Linearity Is a Regime, Not a Law: Frequency
@@ -261,7 +261,11 @@ If you use this code, cite the archived release:
 
 > M. C. Özdemir, *Linearity Is a Regime, Not a Law: reproducibility code for
 > frequency degrees of freedom as native nonlinearity primitives for optical
-> computing*, v1.0, Zenodo, 2026. doi:10.5281/zenodo.21712172
+> computing*, v1.0, Zenodo, 2026. doi:10.5281/zenodo.21712362
+
+The badge above uses the *concept* DOI (`10.5281/zenodo.21712171`), which always
+resolves to the latest version; the citation above pins the specific version the
+paper accompanies.
 
 Machine-readable metadata is in [`CITATION.cff`](CITATION.cff). The journal
 version is under review; this section will be updated with its DOI on acceptance.
